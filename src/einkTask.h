@@ -7,6 +7,7 @@ class EinkTask : public TaskThread<EinkTask> {
 public:
   EinkTask();
   ~EinkTask();
+  void run();
   bool isBusy();
   void setBusy(bool busyTag);
   QueueHandle_t getSensorValueQueue();

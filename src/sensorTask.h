@@ -2,17 +2,19 @@
 
 #include "taskThread.h"
 
-class SensorTask : public TaskThread<SensorTask> {
-  friend class TaskThread<SensorTask>;
+class SensorTask : public TaskThread<SensorTask>
+{
+    friend class TaskThread<SensorTask>;
 
 public:
-  SensorTask();
-  ~SensorTask();
-
-  void addQueue(QueueHandle_t queue);
+    SensorTask();
+    ~SensorTask();
+    void run();
+    void addQueue(QueueHandle_t queue);
 
 private:
-  QueueHandle_t queue;
+    uint8_t btnValue;
+    QueueHandle_t btnQueue;
 
-  std::vector<QueueHandle_t> queues;
+    std::vector<QueueHandle_t> queues;
 };
