@@ -1,5 +1,7 @@
-#include "taskThread.h"
+#pragma once
 #include <Arduino.h>
+
+#include "taskThread.h"
 
 class EinkTask : public TaskThread<EinkTask> {
   friend class TaskThread<EinkTask>;
