@@ -9,14 +9,8 @@ SensorTask::~SensorTask() {}
 const int switch_interval = 500;
 const int long_press_interval = 3000;
 
-volatile bool pressed = false;
-volatile unsigned long btnStart = 0L;
-volatile bool pressOver = false;
-volatile unsigned long pressTime = 0L;
-
 void SensorTask::btnCheck() {
-  int pinState = digitalRead(BTN_WAKE_PIN);
-  if (pinState == HIGH) {
+  if (digitalRead(BTN_WAKE_PIN) == HIGH) {
     if (!pressed) {
       btnStart = millis();
       pressed = true;
@@ -24,30 +18,34 @@ void SensorTask::btnCheck() {
   } else {
     if (pressed) {
       pressOver = true;
-      unsigned long pressTime = millis() - btnStart;
+      // unsigned long pressTime = millis() - btnStart;
       pressed = false;
     }
   }
 }
 
 void SensorTask::run() {
+  pressed = false;
+  btnStart = 0L;
+  pressOver = false;
+  pressTime = 0L;
+  esp_sleep_enable_ext0_wakeup(BTN_WAKE_PIN, 0);
   while (1) {
     btnCheck();
     unsigned long currentMillis = millis();
     if (pressOver) {
       pressOver = false;
       int sensorValue = analogRead(SENSOR_A);
-      Serial.print("Sensor:");
-      Serial.println(sensorValue);
+      // 4095=完全干燥，1300基本泡在水里
       publish(sensorValue);
       lastMillis = currentMillis;
     } else {
       if (currentMillis - lastMillis >= SLEEP_INTERVAL_MILLIS) {
         lastMillis = currentMillis;
-        esp_deep_sleep_start();
+        esp_light_sleep_start();
       }
-      delay(200);
     }
+    delay(200);
   }
 }
 

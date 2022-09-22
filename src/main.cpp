@@ -18,23 +18,18 @@ void setup() {
   sensorTask.addQueue(serialDebugQueue);
   sensorTask.runTask();
   vTaskDelete(NULL);
-
-  pinMode(BTN_WAKE_PIN, INPUT);
   rtc_gpio_pulldown_en(BTN_WAKE_PIN);
   rtc_gpio_pullup_dis(BTN_WAKE_PIN);
-  digitalWrite(BTN_WAKE_PIN,LOW);
-  esp_sleep_enable_ext0_wakeup(BTN_WAKE_PIN, 1);
-  Serial.println("started");
-  esp_deep_sleep_start();
+  
+  pinMode(BTN_WAKE_PIN, INPUT);
 }
 
 int sensorValue = 0;
-unsigned long last_debug = 0;
 void loop() {
-  if (millis() - last_debug > 200 &&
-      xQueueReceive(serialDebugQueue, &sensorValue, portMAX_DELAY) == pdTRUE) {
-    Serial.println("current value:" + sensorValue);
-    last_debug = millis();
+  if (xQueueReceive(serialDebugQueue, &sensorValue, portMAX_DELAY) ==
+      pdFALSE /**未更新数据*/) {
+    Serial.print("current value:");
+    Serial.println(sensorValue);
   }
   Serial.println("loop");
   delay(1000);
