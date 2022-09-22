@@ -11,13 +11,10 @@ public:
   ~SensorTask();
   void run();
   void addQueue(QueueHandle_t sensorValueQueue);
-  void btnChanged();
-
+  
 private:
   unsigned long lastMillis;
   std::vector<QueueHandle_t> queues;
   void publish(const int &sensorValue);
-
-  void buttonPressed();
-  void buttonReleased();
+  void btnCheck();
 };

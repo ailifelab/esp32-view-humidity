@@ -9,51 +9,44 @@ SensorTask::~SensorTask() {}
 const int switch_interval = 500;
 const int long_press_interval = 3000;
 
-volatile unsigned long last_switch = 0;
-volatile unsigned long current = 0;
-volatile bool button_acted = false;
-volatile bool long_press = false;
+volatile bool pressed = false;
+volatile unsigned long btnStart = 0L;
+volatile bool pressOver = false;
+volatile unsigned long pressTime = 0L;
 
-void SensorTask::btnChanged() {
-  if (digitalRead(BTN_WAKE_PIN) == HIGH) {
-    buttonPressed();
+void SensorTask::btnCheck() {
+  int pinState = digitalRead(BTN_WAKE_PIN);
+  if (pinState == HIGH) {
+    if (!pressed) {
+      btnStart = millis();
+      pressed = true;
+    }
   } else {
-    buttonReleased();
-  }
-}
-
-void SensorTask::buttonPressed() {
-  button_acted = false;
-  current = millis();
-}
-
-void SensorTask::buttonReleased() {
-  if (!button_acted) {
-    button_acted = true; // 标识当前一个按钮完成的按下抬起动作已经完备
-    if ((millis() - current) > long_press_interval) {
-      long_press = true; //记录按钮按下的总时长
+    if (pressed) {
+      pressOver = true;
+      unsigned long pressTime = millis() - btnStart;
+      pressed = false;
     }
   }
 }
 
 void SensorTask::run() {
   while (1) {
+    btnCheck();
     unsigned long currentMillis = millis();
-    btnChanged();
-    if (!button_acted || (current - last_switch) < switch_interval) {
-      delay(200);
-      if (currentMillis - lastMillis >= SLEEP_INTERVAL_MILLIS) {
-        lastMillis = currentMillis;
-        esp_deep_sleep_start();
-      } // 在按钮事件不完备或者bounce的时候不做回应
-    } else if (button_acted) {
-      //读取湿度传感器数据并塞到队列
+    if (pressOver) {
+      pressOver = false;
       int sensorValue = analogRead(SENSOR_A);
       Serial.print("Sensor:");
       Serial.println(sensorValue);
       publish(sensorValue);
       lastMillis = currentMillis;
-      long_press = false;
+    } else {
+      if (currentMillis - lastMillis >= SLEEP_INTERVAL_MILLIS) {
+        lastMillis = currentMillis;
+        esp_deep_sleep_start();
+      }
+      delay(200);
     }
   }
 }
